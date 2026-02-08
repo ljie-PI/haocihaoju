@@ -1,30 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:haocihaoju/main.dart';
+import 'package:haocihaoju/src/app/app_dependencies.dart';
+import 'package:haocihaoju/src/data/in_memory_quote_repository.dart';
+import 'package:haocihaoju/src/models/excerpt_suggestion.dart';
+import 'package:haocihaoju/src/services/literature_analyzer.dart';
+import 'package:haocihaoju/src/services/ocr_service.dart';
+
+class _FakeOcrService implements OcrService {
+  @override
+  Future<void> dispose() async {}
+
+  @override
+  Future<String> recognizeText(String imagePath) async => '';
+}
+
+class _FakeLiteratureAnalyzer implements LiteratureAnalyzer {
+  @override
+  Future<List<ExcerptSuggestion>> analyzeArticle(String articleText) async {
+    return const <ExcerptSuggestion>[];
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('app shell renders with scan tab', (WidgetTester tester) async {
+    final AppDependencies dependencies = AppDependencies(
+      quoteRepository: InMemoryQuoteRepository(),
+      ocrService: _FakeOcrService(),
+      literatureAnalyzer: _FakeLiteratureAnalyzer(),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(buildApp(dependencies: dependencies));
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Scan and Analyze'), findsOneWidget);
+    expect(find.text('Scan'), findsOneWidget);
+    expect(find.text('Excerpts'), findsOneWidget);
   });
 }

@@ -43,3 +43,26 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# VS Code local settings
+.vscode/
+
+# Xcode user-specific files
+**/xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.xcresult/
+
+# iOS local generated artifacts
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/ephemeral/
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/Generated.xcconfig
+
+# Temporary patch/merge files
+*.orig
+*.tmp
