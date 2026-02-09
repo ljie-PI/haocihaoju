@@ -56,8 +56,8 @@ List<ExcerptSuggestion> pickHeuristicExcerpts(String articleText, {int maxItems 
   return ranked.take(maxItems).map((String quote) {
     return ExcerptSuggestion(
       quote: quote,
-      analysis: 'This line stands out for imagery and emotional tension. It works because it transforms abstract feeling into concrete language.',
-      styleNotes: 'Narrative voice: lyrical. Expression: figurative, rhythmic cadence, and layered meaning in context.',
+      analysis: '这句话在意象和情感张力上很突出，把抽象感受转化成了可感知的语言，因此更有感染力。',
+      styleNotes: '叙述语气偏抒情，表达上有比喻感与节奏感，且在上下文中形成了层次递进。',
     );
   }).toList();
 }

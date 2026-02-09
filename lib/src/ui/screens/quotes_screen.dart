@@ -45,11 +45,11 @@ class _QuotesScreenState extends State<QuotesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Saved Excerpts')),
+      appBar: AppBar(title: const Text('已保存摘录')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _quotes.isEmpty
-              ? const Center(child: Text('No saved excerpts yet.'))
+              ? const Center(child: Text('暂无已保存摘录。'))
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: _quotes.length,
@@ -82,7 +82,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Excerpt deleted.')),
+      const SnackBar(content: Text('摘录已删除。')),
     );
   }
 }
@@ -126,7 +126,7 @@ class _QuoteItemCard extends StatelessWidget {
               child: IconButton(
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
-                tooltip: 'Delete',
+                tooltip: '删除',
               ),
             ),
           ],

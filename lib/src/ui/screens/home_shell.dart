@@ -39,12 +39,12 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
             icon: Icon(Icons.document_scanner_outlined),
             selectedIcon: Icon(Icons.document_scanner),
-            label: 'Scan',
+            label: '扫描',
           ),
           NavigationDestination(
             icon: Icon(Icons.menu_book_outlined),
             selectedIcon: Icon(Icons.menu_book),
-            label: 'Excerpts',
+            label: '摘录',
           ),
         ],
       ),

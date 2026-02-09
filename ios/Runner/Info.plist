@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Haocihaoju</string>
+	<string>好词好句</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>haocihaoju</string>
+	<string>好词好句</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,8 +46,8 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app uses the camera to scan article pages for OCR.</string>
+	<string>用于拍摄文章页面并进行文字识别。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app may access photos when selecting scanned pages.</string>
+	<string>用于从相册选择图片并进行文字识别。</string>
 </dict>
 </plist>

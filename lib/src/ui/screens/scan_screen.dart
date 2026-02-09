@@ -42,7 +42,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan and Analyze'),
+        title: const Text('扫描与解析'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -54,39 +54,43 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    '1) Capture pages from camera',
+                    '1）拍摄页面',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: <Widget>[
-                      FilledButton.icon(
-                        onPressed: _processingImage ? null : _scanOnePage,
-                        icon: _processingImage
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.camera_alt),
-                        label: const Text('Scan next page'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: _pages.isEmpty ? null : _clearPages,
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('Clear pages'),
-                      ),
-                    ],
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      runAlignment: WrapAlignment.center,
+                      spacing: 20,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        FilledButton.icon(
+                          onPressed: _processingImage ? null : _scanOnePage,
+                          icon: _processingImage
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.camera_alt),
+                          label: const Text('扫描页面'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _pages.isEmpty ? null : _clearPages,
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('清空页面'),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Text('Pages scanned: ${_pages.length}'),
+                  Text('已扫描页数：${_pages.length}'),
                   const SizedBox(height: 8),
                   if (_pages.isNotEmpty)
                     Text(
                       _pages
-                          .map((ScannedPage p) => 'P${p.pageNumber}: ${p.extractedText.length} chars')
+                          .map((ScannedPage p) => '第${p.pageNumber}页：${p.extractedText.length}字')
                           .join('  |  '),
                       style: theme.textTheme.bodySmall,
                     ),
@@ -102,7 +106,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    '2) OCR merged article text',
+                    '2）文字识别合并后的文章文本',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
@@ -114,7 +118,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: SelectableText(
-                      _mergedText.isEmpty ? 'No OCR text yet.' : _mergedText,
+                      _mergedText.isEmpty ? '暂无识别文本。' : _mergedText,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
@@ -130,7 +134,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    '3) LLM literary extraction and commentary',
+                    '3）文学片段提取与点评',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
@@ -143,12 +147,12 @@ class _ScanScreenState extends State<ScanScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.auto_awesome),
-                    label: const Text('Analyze article'),
+                    label: const Text('开始解析'),
                   ),
                   const SizedBox(height: 12),
                   if (_suggestions.isEmpty)
                     Text(
-                      'No excerpt suggestions yet.',
+                      '暂无推荐摘录。',
                       style: theme.textTheme.bodySmall,
                     )
                   else
@@ -204,7 +208,7 @@ class _ScanScreenState extends State<ScanScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('OCR failed: $error')),
+        SnackBar(content: Text('文字识别失败：$error')),
       );
     } finally {
       if (mounted) {
@@ -263,7 +267,7 @@ class _ScanScreenState extends State<ScanScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Saved to excerpts.')),
+      const SnackBar(content: Text('已保存到摘录。')),
     );
   }
 }
@@ -309,7 +313,7 @@ class _SuggestionCard extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onSave,
               icon: const Icon(Icons.bookmark_add_outlined),
-              label: const Text('Save'),
+              label: const Text('保存'),
             ),
           ),
         ],

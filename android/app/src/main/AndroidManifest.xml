@@ -5,7 +5,7 @@
         android:required="false" />
 
     <application
-        android:label="haocihaoju"
+        android:label="好词好句"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

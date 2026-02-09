@@ -1,11 +1,11 @@
 {
-    "name": "haocihaoju",
-    "short_name": "haocihaoju",
+    "name": "好词好句",
+    "short_name": "好词好句",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "好词好句",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

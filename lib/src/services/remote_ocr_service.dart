@@ -29,7 +29,7 @@ class RemoteOcrService implements OcrService {
   @override
   Future<String> recognizeText(String imagePath) async {
     if (_endpoint.isEmpty) {
-      throw StateError('OCR_API_URL is not configured.');
+      throw StateError('未配置远程文字识别服务地址（OCR_API_URL）。');
     }
 
     final Uri uri = Uri.parse(_endpoint);
@@ -45,12 +45,12 @@ class RemoteOcrService implements OcrService {
     final http.Response response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Remote OCR failed (${response.statusCode}): ${_truncate(response.body)}');
+      throw StateError('远程文字识别请求失败（${response.statusCode}）：${_truncate(response.body)}');
     }
 
     final String text = _extractText(response);
     if (text.trim().isEmpty) {
-      throw StateError('Remote OCR response did not contain recognized text.');
+      throw StateError('远程文字识别返回中未找到识别文本。');
     }
     return text.trim();
   }

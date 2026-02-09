@@ -33,7 +33,7 @@ class _HaociHaojuAppState extends State<HaociHaojuApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Haocihaoju',
+      title: '好词好句',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF005A87)),
       ),
