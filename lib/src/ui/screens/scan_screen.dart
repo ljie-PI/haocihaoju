@@ -177,7 +177,6 @@ class _ScanScreenState extends State<ScanScreen> {
   Future<void> _scanOnePage() async {
     final XFile? image = await _picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 90,
     );
     if (!mounted || image == null) {
       return;

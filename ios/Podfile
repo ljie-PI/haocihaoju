@@ -28,6 +28,8 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
+  # Enable Chinese on-device OCR model for ML Kit text recognition.
+  pod 'GoogleMLKit/TextRecognitionChinese', '~> 9.0.0'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
