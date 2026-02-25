@@ -3,7 +3,7 @@
 A Flutter app for:
 - multi-page article scanning with phone camera,
 - on-device OCR text extraction and page merge (ML Kit),
-- LLM-style literary quote mining and commentary,
+- real LLM-driven good words / good sentences analysis,
 - local excerpt storage with cloud-ready repository interfaces.
 
 ## MVP Features Implemented
@@ -14,6 +14,7 @@ A Flutter app for:
 4. Literary excerpt suggestions with contextual analysis
 5. Local excerpt list (SQLite)
 6. Cloud migration-ready data interface (`CloudQuoteSync`)
+7. Prompt template file for LLM instruction (`assets/prompts/literary_analysis_prompt.txt`)
 
 ## Project Structure
 
@@ -27,8 +28,14 @@ A Flutter app for:
 
 ```bash
 flutter pub get
-flutter run
+flutter run \
+  --dart-define=LLM_BASE_URL=https://your-openai-compatible-host/v1 \
+  --dart-define=LLM_API_KEY=your_api_key \
+  --dart-define=LLM_MODEL=gpt-4o-mini
 ```
+
+Optional:
+- `LLM_CHAT_COMPLETIONS_PATH` (default `/chat/completions`)
 
 ## OCR Implementation
 

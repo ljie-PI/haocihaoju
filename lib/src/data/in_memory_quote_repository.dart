@@ -17,7 +17,8 @@ class InMemoryQuoteRepository implements QuoteRepository {
   Stream<List<QuoteItem>> watchQuotes() => _controller.stream;
 
   @override
-  Future<List<QuoteItem>> getQuotes() async => List<QuoteItem>.unmodifiable(_quotes);
+  Future<List<QuoteItem>> getQuotes() async =>
+      List<QuoteItem>.unmodifiable(_quotes);
 
   @override
   Future<void> addQuote(QuoteItem item) async {

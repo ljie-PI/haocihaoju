@@ -18,18 +18,34 @@ class LocalQuoteDataSource {
 
     _db = await openDatabase(
       fullPath,
-      version: 1,
+      version: 2,
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE $_table (
             id TEXT PRIMARY KEY,
-            quote TEXT NOT NULL,
-            analysis TEXT NOT NULL,
-            style_notes TEXT NOT NULL,
+            quote TEXT NOT NULL DEFAULT '',
+            analysis TEXT NOT NULL DEFAULT '',
+            style_notes TEXT NOT NULL DEFAULT '',
             article_text TEXT NOT NULL,
+            beautiful_words_json TEXT NOT NULL DEFAULT '[]',
+            sentence_analyses_json TEXT NOT NULL DEFAULT '[]',
+            reflection TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL
           )
         ''');
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE $_table ADD COLUMN beautiful_words_json TEXT NOT NULL DEFAULT '[]'",
+          );
+          await db.execute(
+            "ALTER TABLE $_table ADD COLUMN sentence_analyses_json TEXT NOT NULL DEFAULT '[]'",
+          );
+          await db.execute(
+            "ALTER TABLE $_table ADD COLUMN reflection TEXT NOT NULL DEFAULT ''",
+          );
+        }
       },
     );
 
@@ -56,10 +72,6 @@ class LocalQuoteDataSource {
 
   Future<void> deleteQuote(String id) async {
     final Database db = await _database;
-    await db.delete(
-      _table,
-      where: 'id = ?',
-      whereArgs: <Object?>[id],
-    );
+    await db.delete(_table, where: 'id = ?', whereArgs: <Object?>[id]);
   }
 }

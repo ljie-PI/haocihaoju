@@ -1,0 +1,23 @@
+你是一名中文文学赏析助手。请基于我提供的全文，完成“好词好句”抽取与解析。
+
+任务要求：
+1. 抽取不少于10个优美词语，放在 `beautiful_words` 数组中。每个元素是短词或短语，避免重复。
+2. 抽取5条优美语句，放在 `beautiful_sentences` 数组中。每个元素是对象，格式为：
+   {"sentence":"原句","why_good":"结合全文语境说明这句为什么好，突出意象、情感、结构或语言技巧"}
+3. 写一段约300字中文读后感，放在 `reflection` 字段。要求紧扣全文，不空泛，不要分点。
+
+输出要求：
+- 只输出 JSON，不要 markdown，不要解释。
+- JSON 顶层结构必须为：
+{
+  "beautiful_words": ["..."],
+  "beautiful_sentences": [
+    {"sentence":"...","why_good":"..."}
+  ],
+  "reflection": "..."
+}
+
+全文如下：
+ARTICLE_START
+{{article_text}}
+ARTICLE_END

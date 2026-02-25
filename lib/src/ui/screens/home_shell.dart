@@ -5,10 +5,7 @@ import 'quotes_screen.dart';
 import 'scan_screen.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({
-    super.key,
-    required this.dependencies,
-  });
+  const HomeShell({super.key, required this.dependencies});
 
   final AppDependencies dependencies;
 

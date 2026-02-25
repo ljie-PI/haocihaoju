@@ -66,3 +66,6 @@ app.*.map.json
 # Temporary patch/merge files
 *.orig
 *.tmp
+
+# Local runtime env (do not commit secrets)
+/env/dev.json

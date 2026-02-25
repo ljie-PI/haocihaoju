@@ -4,10 +4,7 @@ import 'app_dependencies.dart';
 import '../ui/screens/home_shell.dart';
 
 class HaociHaojuApp extends StatefulWidget {
-  const HaociHaojuApp({
-    super.key,
-    required this.dependencies,
-  });
+  const HaociHaojuApp({super.key, required this.dependencies});
 
   final AppDependencies dependencies;
 

@@ -9,8 +9,8 @@ class LocalQuoteRepository implements QuoteRepository {
   LocalQuoteRepository({
     required LocalQuoteDataSource localDataSource,
     CloudQuoteSync? cloudSync,
-  })  : _localDataSource = localDataSource,
-        _cloudSync = cloudSync;
+  }) : _localDataSource = localDataSource,
+       _cloudSync = cloudSync;
 
   final LocalQuoteDataSource _localDataSource;
   final CloudQuoteSync? _cloudSync;

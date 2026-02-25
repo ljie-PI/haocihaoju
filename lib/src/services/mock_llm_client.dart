@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import '../models/excerpt_suggestion.dart';
 import 'heuristic_excerpt_picker.dart';
 import 'llm_client.dart';
 
@@ -8,26 +7,34 @@ class MockLlmClient implements LlmClient {
   @override
   Future<String> complete(String prompt) async {
     final String articleText = _extractArticleText(prompt);
-    final List<ExcerptSuggestion> suggestions = pickHeuristicExcerpts(articleText, maxItems: 5);
-    final List<Map<String, String>> payload = suggestions
-        .map(
-          (ExcerptSuggestion item) => <String, String>{
-            'quote': item.quote,
-            'analysis': item.analysis,
-            'style_notes': item.styleNotes,
-          },
-        )
-        .toList();
+    final analysis = pickHeuristicAnalysis(articleText);
 
-    return jsonEncode(<String, Object?>{'items': payload});
+    return jsonEncode(<String, Object?>{
+      'beautiful_words': analysis.beautifulWords,
+      'beautiful_sentences': analysis.beautifulSentences
+          .map(
+            (item) => <String, String>{
+              'sentence': item.sentence,
+              'why_good': item.whyGood,
+            },
+          )
+          .toList(),
+      'reflection': analysis.reflection,
+    });
   }
 
   String _extractArticleText(String prompt) {
-    const String marker = 'ARTICLE_START\n';
+    const String marker = 'ARTICLE_START';
+    const String endMarker = 'ARTICLE_END';
     final int index = prompt.indexOf(marker);
     if (index == -1) {
       return prompt;
     }
-    return prompt.substring(index + marker.length).trim();
+    final String afterStart = prompt.substring(index + marker.length).trim();
+    final int endIndex = afterStart.indexOf(endMarker);
+    if (endIndex == -1) {
+      return afterStart.trim();
+    }
+    return afterStart.substring(0, endIndex).trim();
   }
 }

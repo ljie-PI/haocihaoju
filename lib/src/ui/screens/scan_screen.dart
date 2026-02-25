@@ -3,15 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../app/app_dependencies.dart';
-import '../../models/excerpt_suggestion.dart';
+import '../../models/literary_analysis_result.dart';
 import '../../models/quote_item.dart';
 import '../../models/scanned_page.dart';
+import '../../models/sentence_analysis.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({
-    super.key,
-    required this.dependencies,
-  });
+  const ScanScreen({super.key, required this.dependencies});
 
   final AppDependencies dependencies;
 
@@ -24,7 +22,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final Uuid _uuid = const Uuid();
 
   final List<ScannedPage> _pages = <ScannedPage>[];
-  List<ExcerptSuggestion> _suggestions = <ExcerptSuggestion>[];
+  LiteraryAnalysisResult? _analysisResult;
 
   bool _processingImage = false;
   bool _analyzing = false;
@@ -41,9 +39,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('扫描与解析'),
-      ),
+      appBar: AppBar(title: const Text('扫描与解析')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -71,7 +67,9 @@ class _ScanScreenState extends State<ScanScreen> {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.camera_alt),
                           label: const Text('扫描页面'),
@@ -90,7 +88,10 @@ class _ScanScreenState extends State<ScanScreen> {
                   if (_pages.isNotEmpty)
                     Text(
                       _pages
-                          .map((ScannedPage p) => '第${p.pageNumber}页：${p.extractedText.length}字')
+                          .map(
+                            (ScannedPage p) =>
+                                '第${p.pageNumber}页：${p.extractedText.length}字',
+                          )
                           .join('  |  '),
                       style: theme.textTheme.bodySmall,
                     ),
@@ -134,12 +135,14 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    '3）文学片段提取与点评',
+                    '3）好词好句抽取与解析',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   FilledButton.icon(
-                    onPressed: (_mergedText.isEmpty || _analyzing) ? null : _analyze,
+                    onPressed: (_mergedText.isEmpty || _analyzing)
+                        ? null
+                        : _analyze,
                     icon: _analyzing
                         ? const SizedBox(
                             width: 16,
@@ -150,21 +153,50 @@ class _ScanScreenState extends State<ScanScreen> {
                     label: const Text('开始解析'),
                   ),
                   const SizedBox(height: 12),
-                  if (_suggestions.isEmpty)
+                  if (_analysisResult == null || _analysisResult!.isEmpty)
+                    Text('暂无解析结果。', style: theme.textTheme.bodySmall)
+                  else ...<Widget>[
                     Text(
-                      '暂无推荐摘录。',
-                      style: theme.textTheme.bodySmall,
-                    )
-                  else
-                    ..._suggestions.map(
-                      (ExcerptSuggestion suggestion) => Padding(
+                      '优美词语（${_analysisResult!.beautifulWords.length}）',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _analysisResult!.beautifulWords
+                          .map((String word) => Chip(label: Text(word)))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '优美语句（${_analysisResult!.beautifulSentences.length}）',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    ..._analysisResult!.beautifulSentences.map(
+                      (SentenceAnalysis sentence) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: _SuggestionCard(
-                          suggestion: suggestion,
-                          onSave: () => _saveSuggestion(suggestion),
-                        ),
+                        child: _SentenceCard(sentence: sentence),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Text('读后感', style: theme.textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    Text(
+                      _analysisResult!.reflection,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: OutlinedButton.icon(
+                        onPressed: _saveCurrentAnalysis,
+                        icon: const Icon(Icons.bookmark_add_outlined),
+                        label: const Text('保存本次解析'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -175,9 +207,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _scanOnePage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-    );
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
     if (!mounted || image == null) {
       return;
     }
@@ -187,7 +217,8 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
-      final String extractedText = await widget.dependencies.ocrService.recognizeText(image.path);
+      final String extractedText = await widget.dependencies.ocrService
+          .recognizeText(image.path);
       if (!mounted) {
         return;
       }
@@ -201,14 +232,15 @@ class _ScanScreenState extends State<ScanScreen> {
             extractedText: extractedText,
           ),
         );
+        _analysisResult = null;
       });
     } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('文字识别失败：$error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('文字识别失败：$error')));
     } finally {
       if (mounted) {
         setState(() {
@@ -221,26 +253,35 @@ class _ScanScreenState extends State<ScanScreen> {
   void _clearPages() {
     setState(() {
       _pages.clear();
-      _suggestions = <ExcerptSuggestion>[];
+      _analysisResult = null;
     });
   }
 
   Future<void> _analyze() async {
     setState(() {
       _analyzing = true;
-      _suggestions = <ExcerptSuggestion>[];
+      _analysisResult = null;
     });
 
     try {
-      final List<ExcerptSuggestion> result =
-          await widget.dependencies.literatureAnalyzer.analyzeArticle(_mergedText);
+      final LiteraryAnalysisResult result = await widget
+          .dependencies
+          .literatureAnalyzer
+          .analyzeArticle(_mergedText);
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _suggestions = result;
+        _analysisResult = result;
       });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('解析失败：$error')));
     } finally {
       if (mounted) {
         setState(() {
@@ -250,35 +291,45 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  Future<void> _saveSuggestion(ExcerptSuggestion suggestion) async {
-    final QuoteItem item = QuoteItem(
-      id: _uuid.v4(),
-      quote: suggestion.quote,
-      analysis: suggestion.analysis,
-      styleNotes: suggestion.styleNotes,
-      articleText: _mergedText,
-      createdAt: DateTime.now(),
-    );
-
-    await widget.dependencies.quoteRepository.addQuote(item);
-    if (!mounted) {
+  Future<void> _saveCurrentAnalysis() async {
+    final LiteraryAnalysisResult? analysis = _analysisResult;
+    if (analysis == null || analysis.isEmpty) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已保存到摘录。')),
+    final QuoteItem item = QuoteItem(
+      id: _uuid.v4(),
+      articleText: _mergedText,
+      beautifulWords: analysis.beautifulWords,
+      beautifulSentences: analysis.beautifulSentences,
+      reflection: analysis.reflection,
+      createdAt: DateTime.now(),
     );
+
+    try {
+      await widget.dependencies.quoteRepository.addQuote(item);
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已保存本次解析。')));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('保存失败：$error')));
+    }
   }
 }
 
-class _SuggestionCard extends StatelessWidget {
-  const _SuggestionCard({
-    required this.suggestion,
-    required this.onSave,
-  });
+class _SentenceCard extends StatelessWidget {
+  const _SentenceCard({required this.sentence});
 
-  final ExcerptSuggestion suggestion;
-  final VoidCallback onSave;
+  final SentenceAnalysis sentence;
 
   @override
   Widget build(BuildContext context) {
@@ -293,28 +344,9 @@ class _SuggestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            suggestion.quote,
-            style: theme.textTheme.titleSmall,
-          ),
+          Text(sentence.sentence, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
-          Text(suggestion.analysis, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 6),
-          Text(
-            suggestion.styleNotes,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: OutlinedButton.icon(
-              onPressed: onSave,
-              icon: const Icon(Icons.bookmark_add_outlined),
-              label: const Text('保存'),
-            ),
-          ),
+          Text(sentence.whyGood, style: theme.textTheme.bodySmall),
         ],
       ),
     );

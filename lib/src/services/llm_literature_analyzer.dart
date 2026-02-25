@@ -1,6 +1,9 @@
 import 'dart:convert';
 
-import '../models/excerpt_suggestion.dart';
+import 'package:flutter/services.dart';
+
+import '../models/literary_analysis_result.dart';
+import '../models/sentence_analysis.dart';
 import 'heuristic_excerpt_picker.dart';
 import 'literature_analyzer.dart';
 import 'llm_client.dart';
@@ -8,62 +11,124 @@ import 'llm_client.dart';
 class LlmLiteratureAnalyzer implements LiteratureAnalyzer {
   LlmLiteratureAnalyzer({
     required LlmClient client,
-  }) : _client = client;
+    String promptAssetPath = 'assets/prompts/literary_analysis_prompt.txt',
+  }) : _client = client,
+       _promptAssetPath = promptAssetPath;
 
   final LlmClient _client;
+  final String _promptAssetPath;
+  String? _cachedPromptTemplate;
 
   @override
-  Future<List<ExcerptSuggestion>> analyzeArticle(String articleText) async {
+  Future<LiteraryAnalysisResult> analyzeArticle(String articleText) async {
     if (articleText.trim().isEmpty) {
-      return <ExcerptSuggestion>[];
+      return const LiteraryAnalysisResult(
+        beautifulWords: <String>[],
+        beautifulSentences: <SentenceAnalysis>[],
+        reflection: '',
+      );
     }
 
-    final String prompt = _buildPrompt(articleText);
+    final String prompt = await _buildPrompt(articleText);
+    final String rawResponse = await _client.complete(prompt);
     try {
-      final String rawResponse = await _client.complete(prompt);
-      final Object? decoded = jsonDecode(rawResponse);
-
-      if (decoded is! Map<String, Object?> || decoded['items'] is! List<Object?>) {
-        return pickHeuristicExcerpts(articleText);
+      final LiteraryAnalysisResult result = _parseResult(rawResponse);
+      if (_isValidResult(result)) {
+        return result;
       }
-
-      final List<Object?> rawItems = decoded['items']! as List<Object?>;
-      final List<ExcerptSuggestion> items = rawItems
-          .whereType<Map<String, Object?>>()
-          .map((Map<String, Object?> row) {
-            final String quote = (row['quote'] ?? '').toString().trim();
-            final String analysis = (row['analysis'] ?? '').toString().trim();
-            final String styleNotes = (row['style_notes'] ?? '').toString().trim();
-            if (quote.isEmpty || analysis.isEmpty || styleNotes.isEmpty) {
-              return null;
-            }
-            return ExcerptSuggestion(
-              quote: quote,
-              analysis: analysis,
-              styleNotes: styleNotes,
-            );
-          })
-          .whereType<ExcerptSuggestion>()
-          .toList();
-
-      if (items.isEmpty) {
-        return pickHeuristicExcerpts(articleText);
-      }
-      return items;
+      return pickHeuristicAnalysis(articleText);
     } catch (_) {
-      return pickHeuristicExcerpts(articleText);
+      return pickHeuristicAnalysis(articleText);
     }
   }
 
-  String _buildPrompt(String articleText) {
-    return '''
-You are a Chinese literature assistant.
-Extract 3-8 excellent words or sentences from the article and analyze each quote with full-context literary commentary.
-Return strict JSON with this format:
-{"items":[{"quote":"...","analysis":"...","style_notes":"..."}]}
-Do not return markdown.
-ARTICLE_START
-$articleText
-''';
+  bool _isValidResult(LiteraryAnalysisResult result) {
+    if (result.beautifulWords.length < 10) {
+      return false;
+    }
+    if (result.beautifulSentences.length < 5) {
+      return false;
+    }
+    return result.reflection.trim().isNotEmpty;
+  }
+
+  Future<String> _buildPrompt(String articleText) async {
+    final String template = await _loadPromptTemplate();
+    return template.replaceAll('{{article_text}}', articleText);
+  }
+
+  Future<String> _loadPromptTemplate() async {
+    final String? cached = _cachedPromptTemplate;
+    if (cached != null && cached.trim().isNotEmpty) {
+      return cached;
+    }
+    final String loaded = await rootBundle.loadString(_promptAssetPath);
+    _cachedPromptTemplate = loaded;
+    return loaded;
+  }
+
+  LiteraryAnalysisResult _parseResult(String rawResponse) {
+    final Object? decoded = _decodeJsonSafely(rawResponse);
+    if (decoded is! Map<String, Object?>) {
+      throw const FormatException('LLM 返回格式错误');
+    }
+
+    final List<String> beautifulWords = _extractWords(
+      decoded['beautiful_words'],
+    );
+    final List<SentenceAnalysis> beautifulSentences = _extractSentences(
+      decoded['beautiful_sentences'],
+    );
+    final String reflection = (decoded['reflection'] ?? '').toString().trim();
+
+    return LiteraryAnalysisResult(
+      beautifulWords: beautifulWords,
+      beautifulSentences: beautifulSentences,
+      reflection: reflection,
+    );
+  }
+
+  List<String> _extractWords(Object? rawWords) {
+    if (rawWords is! List<Object?>) {
+      return <String>[];
+    }
+    return rawWords
+        .map((Object? word) => (word ?? '').toString().trim())
+        .where((String word) => word.isNotEmpty)
+        .toSet()
+        .toList();
+  }
+
+  List<SentenceAnalysis> _extractSentences(Object? rawSentences) {
+    if (rawSentences is! List<Object?>) {
+      return <SentenceAnalysis>[];
+    }
+
+    return rawSentences
+        .whereType<Map<String, Object?>>()
+        .map((Map<String, Object?> row) {
+          final String sentence = (row['sentence'] ?? '').toString().trim();
+          final String whyGood = (row['why_good'] ?? '').toString().trim();
+          if (sentence.isEmpty || whyGood.isEmpty) {
+            return null;
+          }
+          return SentenceAnalysis(sentence: sentence, whyGood: whyGood);
+        })
+        .whereType<SentenceAnalysis>()
+        .toList();
+  }
+
+  Object? _decodeJsonSafely(String rawResponse) {
+    final String trimmed = rawResponse.trim();
+    try {
+      return jsonDecode(trimmed);
+    } catch (_) {
+      final int start = trimmed.indexOf('{');
+      final int end = trimmed.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        return jsonDecode(trimmed.substring(start, end + 1));
+      }
+      rethrow;
+    }
   }
 }

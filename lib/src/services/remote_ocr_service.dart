@@ -12,12 +12,16 @@ class RemoteOcrService implements OcrService {
     String imageFieldName = 'image',
     String textFieldPath = '',
     http.Client? client,
-  })  : _endpoint = endpoint.trim(),
-        _apiKey = apiKey.trim(),
-        _apiKeyHeader = apiKeyHeader.trim().isEmpty ? 'Authorization' : apiKeyHeader.trim(),
-        _imageFieldName = imageFieldName.trim().isEmpty ? 'image' : imageFieldName.trim(),
-        _textFieldPath = textFieldPath.trim(),
-        _client = client ?? http.Client();
+  }) : _endpoint = endpoint.trim(),
+       _apiKey = apiKey.trim(),
+       _apiKeyHeader = apiKeyHeader.trim().isEmpty
+           ? 'Authorization'
+           : apiKeyHeader.trim(),
+       _imageFieldName = imageFieldName.trim().isEmpty
+           ? 'image'
+           : imageFieldName.trim(),
+       _textFieldPath = textFieldPath.trim(),
+       _client = client ?? http.Client();
 
   final String _endpoint;
   final String _apiKey;
@@ -33,19 +37,27 @@ class RemoteOcrService implements OcrService {
     }
 
     final Uri uri = Uri.parse(_endpoint);
-    final http.MultipartRequest request = http.MultipartRequest('POST', uri)
-      ..files.add(await http.MultipartFile.fromPath(_imageFieldName, imagePath));
+    final http.MultipartRequest request = http.MultipartRequest(
+      'POST',
+      uri,
+    )..files.add(await http.MultipartFile.fromPath(_imageFieldName, imagePath));
 
     if (_apiKey.isNotEmpty) {
       request.headers[_apiKeyHeader] =
-          _apiKeyHeader.toLowerCase() == 'authorization' ? 'Bearer $_apiKey' : _apiKey;
+          _apiKeyHeader.toLowerCase() == 'authorization'
+          ? 'Bearer $_apiKey'
+          : _apiKey;
     }
 
     final http.StreamedResponse streamedResponse = await _client.send(request);
-    final http.Response response = await http.Response.fromStream(streamedResponse);
+    final http.Response response = await http.Response.fromStream(
+      streamedResponse,
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('远程文字识别请求失败（${response.statusCode}）：${_truncate(response.body)}');
+      throw StateError(
+        '远程文字识别请求失败（${response.statusCode}）：${_truncate(response.body)}',
+      );
     }
 
     final String text = _extractText(response);
@@ -100,7 +112,13 @@ class RemoteOcrService implements OcrService {
 
   String _extractFromCommonFields(dynamic decoded) {
     if (decoded is Map<String, dynamic>) {
-      const List<String> keys = <String>['text', 'ocr_text', 'content', 'resultText', 'output_text'];
+      const List<String> keys = <String>[
+        'text',
+        'ocr_text',
+        'content',
+        'resultText',
+        'output_text',
+      ];
       for (final String key in keys) {
         final dynamic value = decoded[key];
         if (value is String && value.trim().isNotEmpty) {

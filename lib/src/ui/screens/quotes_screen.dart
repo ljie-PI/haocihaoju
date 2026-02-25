@@ -4,12 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../data/quote_repository.dart';
 import '../../models/quote_item.dart';
+import '../../models/sentence_analysis.dart';
 
 class QuotesScreen extends StatefulWidget {
-  const QuotesScreen({
-    super.key,
-    required this.repository,
-  });
+  const QuotesScreen({super.key, required this.repository});
 
   final QuoteRepository repository;
 
@@ -26,7 +24,9 @@ class _QuotesScreenState extends State<QuotesScreen> {
   void initState() {
     super.initState();
     _loadInitial();
-    _subscription = widget.repository.watchQuotes().listen((List<QuoteItem> quotes) {
+    _subscription = widget.repository.watchQuotes().listen((
+      List<QuoteItem> quotes,
+    ) {
       if (!mounted) {
         return;
       }
@@ -45,23 +45,23 @@ class _QuotesScreenState extends State<QuotesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('已保存摘录')),
+      appBar: AppBar(title: const Text('已保存解析')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _quotes.isEmpty
-              ? const Center(child: Text('暂无已保存摘录。'))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _quotes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (BuildContext context, int index) {
-                    final QuoteItem item = _quotes[index];
-                    return _QuoteItemCard(
-                      item: item,
-                      onDelete: () => _delete(item.id),
-                    );
-                  },
-                ),
+          ? const Center(child: Text('暂无已保存解析。'))
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _quotes.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (BuildContext context, int index) {
+                final QuoteItem item = _quotes[index];
+                return _QuoteItemCard(
+                  item: item,
+                  onDelete: () => _delete(item.id),
+                );
+              },
+            ),
     );
   }
 
@@ -81,17 +81,14 @@ class _QuotesScreenState extends State<QuotesScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('摘录已删除。')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('摘录已删除。')));
   }
 }
 
 class _QuoteItemCard extends StatelessWidget {
-  const _QuoteItemCard({
-    required this.item,
-    required this.onDelete,
-  });
+  const _QuoteItemCard({required this.item, required this.onDelete});
 
   final QuoteItem item;
   final VoidCallback onDelete;
@@ -99,6 +96,7 @@ class _QuoteItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final List<SentenceAnalysis> sentenceAnalyses = item.beautifulSentences;
 
     return Card(
       child: Padding(
@@ -106,16 +104,50 @@ class _QuoteItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(item.quote, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Text(item.analysis, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 6),
             Text(
-              item.styleNotes,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
+              '优美词语（${item.beautifulWords.length}）',
+              style: theme.textTheme.titleSmall,
             ),
+            const SizedBox(height: 8),
+            if (item.beautifulWords.isEmpty)
+              Text('无', style: theme.textTheme.bodySmall)
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: item.beautifulWords
+                    .map((String word) => Chip(label: Text(word)))
+                    .toList(),
+              ),
+            const SizedBox(height: 12),
+            Text(
+              '优美语句（${sentenceAnalyses.length}）',
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            if (sentenceAnalyses.isEmpty)
+              Text('无', style: theme.textTheme.bodySmall)
+            else
+              ...sentenceAnalyses.map(
+                (SentenceAnalysis sentence) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        sentence.sentence,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(sentence.whyGood, style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 6),
+            Text('读后感', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Text(item.reflection, style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             Text(
               item.createdAt.toIso8601String(),

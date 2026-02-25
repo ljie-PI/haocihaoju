@@ -1,5 +1,5 @@
-import '../models/excerpt_suggestion.dart';
+import '../models/literary_analysis_result.dart';
 
 abstract class LiteratureAnalyzer {
-  Future<List<ExcerptSuggestion>> analyzeArticle(String articleText);
+  Future<LiteraryAnalysisResult> analyzeArticle(String articleText);
 }
