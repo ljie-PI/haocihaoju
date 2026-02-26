@@ -1,51 +1,58 @@
-# Haocihaoju
+# 好词好句
 
-A Flutter app for:
-- multi-page article scanning with phone camera,
-- on-device OCR text extraction and page merge (ML Kit),
-- real LLM-driven good words / good sentences analysis,
-- local excerpt storage with cloud-ready repository interfaces.
+一个 Flutter 应用，用于：
+- 使用手机摄像头扫描多页文章
+- 本地 OCR 文字提取与页面合并（ML Kit）
+- 真正的 LLM 驱动的好词好句分析
+- 本地摘录存储，具备云端同步的数据接口
 
-## MVP Features Implemented
+## 已实现的 MVP 功能
 
-1. Camera scan flow (scan pages one by one)
-2. OCR extraction per page (on-device ML Kit)
-3. Multi-page text merge into one article body
-4. Literary excerpt suggestions with contextual analysis
-5. Local excerpt list (SQLite)
-6. Cloud migration-ready data interface (`CloudQuoteSync`)
-7. Prompt template file for LLM instruction (`assets/prompts/literary_analysis_prompt.txt`)
+1. 相机扫描流程（逐页扫描）
+2. 每页 OCR 提取（本地 ML Kit）
+3. 多页文本合并成整篇文章
+4. 文学摘录建议与上下文分析
+5. 本地摘录列表（SQLite）
+6. 云端迁移就绪的数据接口（`CloudQuoteSync`）
+7. LLM 指令提示模板文件（`assets/prompts/literary_analysis_prompt.txt`）
 
-## Project Structure
+## 项目结构
 
-- `lib/src/ui/screens/scan_screen.dart`: scan, OCR, analyze, save
-- `lib/src/ui/screens/quotes_screen.dart`: saved excerpts list
-- `lib/src/services`: remote OCR + LLM analysis abstractions/implementations
-- `lib/src/data`: repository + local datasource + cloud sync interface
-- `lib/src/models`: core domain models
+- `lib/src/ui/screens/scan_screen.dart`: 扫描、OCR、分析、保存
+- `lib/src/ui/screens/quotes_screen.dart`: 已保存的摘录列表
+- `lib/src/services`: 远程 OCR + LLM 分析的抽象与实现
+- `lib/src/data`: 仓储 + 本地数据源 + 云端同步接口
+- `lib/src/models`: 核心领域模型
 
-## Run
+## 运行
+
+创建 `env/dev.json`：
+
+```json
+{
+  "LLM_BASE_URL": "<OPENAI_BASE_URL>",
+  "LLM_API_KEY": "<OPENAI_API_KEY>",
+  "LLM_MODEL": "qwen3-max",
+  "LLM_CHAT_COMPLETIONS_PATH": "/chat/completions"
+}
+```
+
+然后运行：
 
 ```bash
 flutter pub get
-flutter run \
-  --dart-define=LLM_BASE_URL=https://your-openai-compatible-host/v1 \
-  --dart-define=LLM_API_KEY=your_api_key \
-  --dart-define=LLM_MODEL=gpt-4o-mini
+flutter run --dart-define-from-file=env/dev.json
 ```
 
-Optional:
-- `LLM_CHAT_COMPLETIONS_PATH` (default `/chat/completions`)
+## OCR 实现
 
-## OCR Implementation
+- 当前默认使用本地 `ML Kit 文字识别`
+- 扫描识别无需 OCR API URL 或 API 密钥
 
-- Current default OCR is on-device `ML Kit Text Recognition`.
-- No OCR API URL or API key is required for scan and recognize.
+## 云端迁移说明
 
-## Notes for Cloud Migration
-
-The app already separates storage behind `QuoteRepository` and `CloudQuoteSync`.
-To migrate to cloud later:
-1. Implement a concrete `CloudQuoteSync` (REST/Firebase/Supabase).
-2. Pass it into `LocalQuoteRepository(cloudSync: ...)`.
-3. Add auth and conflict resolution policy.
+应用已通过 `QuoteRepository` 和 `CloudQuoteSync` 分离了存储层。
+后续迁移到云端：
+1. 实现具体的 `CloudQuoteSync`（REST/Firebase/Supabase）
+2. 将其传入 `LocalQuoteRepository(cloudSync: ...)`
+3. 添加认证与冲突解决策略
