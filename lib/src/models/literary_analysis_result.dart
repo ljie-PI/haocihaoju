@@ -1,4 +1,5 @@
 import 'sentence_analysis.dart';
+import 'word_analysis.dart';
 
 class LiteraryAnalysisResult {
   const LiteraryAnalysisResult({
@@ -7,7 +8,7 @@ class LiteraryAnalysisResult {
     required this.reflection,
   });
 
-  final List<String> beautifulWords;
+  final List<WordAnalysis> beautifulWords;
   final List<SentenceAnalysis> beautifulSentences;
   final String reflection;
 

@@ -1,5 +1,6 @@
 import '../models/literary_analysis_result.dart';
 import '../models/sentence_analysis.dart';
+import '../models/word_analysis.dart';
 
 LiteraryAnalysisResult pickHeuristicAnalysis(String articleText) {
   final List<String> sentences = articleText
@@ -11,7 +12,7 @@ LiteraryAnalysisResult pickHeuristicAnalysis(String articleText) {
 
   if (sentences.isEmpty) {
     return const LiteraryAnalysisResult(
-      beautifulWords: <String>[],
+      beautifulWords: <WordAnalysis>[],
       beautifulSentences: <SentenceAnalysis>[],
       reflection: '',
     );
@@ -69,19 +70,19 @@ LiteraryAnalysisResult pickHeuristicAnalysis(String articleText) {
       )
       .toList();
 
-  final List<String> beautifulWords = <String>[
-    '清冽',
-    '氤氲',
-    '澄澈',
-    '绵密',
-    '沉潜',
-    '斑驳',
-    '温润',
-    '悠长',
-    '微茫',
-    '余韵',
-    '舒展',
-    '静谧',
+  final List<WordAnalysis> beautifulWords = <WordAnalysis>[
+    WordAnalysis(word: '清冽', definition: '形容水质清澈寒凉', usage: '文中用"清冽"营造纯净、宁静的氛围'),
+    WordAnalysis(word: '氤氲', definition: '形容烟气、水气弥漫的样子', usage: '增强画面的朦胧美感和意境深度'),
+    WordAnalysis(word: '澄澈', definition: '清澈透明', usage: '突出景物或内心的清明状态'),
+    WordAnalysis(word: '绵密', definition: '形容质地细密、情感深厚', usage: '强化情感或描写的细致程度'),
+    WordAnalysis(word: '沉潜', definition: '沉下心、潜入深处', usage: '表现人物内心的静默与深度'),
+    WordAnalysis(word: '斑驳', definition: '色彩杂乱、光影交错', usage: '增强画面层次感和时光感'),
+    WordAnalysis(word: '温润', definition: '温和润泽', usage: '营造柔和、舒适的氛围'),
+    WordAnalysis(word: '悠长', definition: '漫长、深远', usage: '延伸时间或情感的深度'),
+    WordAnalysis(word: '微茫', definition: '微弱、隐约', usage: '表现含蓄、朦胧的美感'),
+    WordAnalysis(word: '余韵', definition: '留下的韵味', usage: '突出作品的艺术感染力和回味'),
+    WordAnalysis(word: '舒展', definition: '伸展、展开', usage: '表现放松、开阔的状态'),
+    WordAnalysis(word: '静谧', definition: '安静、宁静', usage: '营造平和、安详的氛围'),
   ];
 
   return LiteraryAnalysisResult(

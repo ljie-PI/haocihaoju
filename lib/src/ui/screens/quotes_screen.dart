@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../data/quote_repository.dart';
 import '../../models/quote_item.dart';
 import '../../models/sentence_analysis.dart';
+import '../../models/word_analysis.dart';
+import '../../ui/widgets/word_detail_overlay.dart';
 
 class QuotesScreen extends StatefulWidget {
   const QuotesScreen({super.key, required this.repository});
@@ -88,7 +90,10 @@ class _QuotesScreenState extends State<QuotesScreen> {
 }
 
 class _QuoteItemCard extends StatelessWidget {
-  const _QuoteItemCard({required this.item, required this.onDelete});
+  const _QuoteItemCard({
+    required this.item,
+    required this.onDelete,
+  });
 
   final QuoteItem item;
   final VoidCallback onDelete;
@@ -116,7 +121,7 @@ class _QuoteItemCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: item.beautifulWords
-                    .map((String word) => Chip(label: Text(word)))
+                    .map((WordAnalysis word) => _WordChip(wordAnalysis: word))
                     .toList(),
               ),
             const SizedBox(height: 12),
@@ -163,6 +168,31 @@ class _QuoteItemCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WordChip extends StatelessWidget {
+  const _WordChip({
+    required this.wordAnalysis,
+  });
+
+  final WordAnalysis wordAnalysis;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        WordDetailOverlay.show(
+          context: context,
+          detail: wordAnalysis,
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Chip(
+        label: Text(wordAnalysis.word),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:haocihaoju/src/app/app_dependencies.dart';
 import 'package:haocihaoju/src/data/in_memory_quote_repository.dart';
 import 'package:haocihaoju/src/models/literary_analysis_result.dart';
 import 'package:haocihaoju/src/models/sentence_analysis.dart';
+import 'package:haocihaoju/src/models/word_analysis.dart';
 import 'package:haocihaoju/src/services/literature_analyzer.dart';
 import 'package:haocihaoju/src/services/ocr_service.dart';
 
@@ -19,7 +20,7 @@ class _FakeLiteratureAnalyzer implements LiteratureAnalyzer {
   @override
   Future<LiteraryAnalysisResult> analyzeArticle(String articleText) async {
     return const LiteraryAnalysisResult(
-      beautifulWords: <String>[],
+      beautifulWords: <WordAnalysis>[],
       beautifulSentences: <SentenceAnalysis>[],
       reflection: '',
     );

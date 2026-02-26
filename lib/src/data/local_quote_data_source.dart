@@ -18,7 +18,7 @@ class LocalQuoteDataSource {
 
     _db = await openDatabase(
       fullPath,
-      version: 2,
+      version: 3,
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE $_table (
@@ -46,6 +46,8 @@ class LocalQuoteDataSource {
             "ALTER TABLE $_table ADD COLUMN reflection TEXT NOT NULL DEFAULT ''",
           );
         }
+        // 版本 2 到 3 的迁移会在 QuoteItem.fromMap 中自动处理
+        // 旧格式的字符串数组会被自动转换为 WordAnalysis 对象
       },
     );
 

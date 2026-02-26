@@ -7,6 +7,8 @@ import '../../models/literary_analysis_result.dart';
 import '../../models/quote_item.dart';
 import '../../models/scanned_page.dart';
 import '../../models/sentence_analysis.dart';
+import '../../models/word_analysis.dart';
+import '../../ui/widgets/word_detail_overlay.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key, required this.dependencies});
@@ -165,7 +167,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: _analysisResult!.beautifulWords
-                          .map((String word) => Chip(label: Text(word)))
+                          .map((word) => _WordChip(wordAnalysis: word))
                           .toList(),
                     ),
                     const SizedBox(height: 12),
@@ -279,9 +281,17 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!mounted) {
         return;
       }
+
+      String message = '解析失败，请重试';
+      if (error.toString().contains('不完整')) {
+        message = '没有提取出足够好的词语和句子，请尝试拍摄内容更丰富的页面。';
+      } else if (error.toString().contains('网络') ||
+                 error.toString().contains('timeout')) {
+        message = '网络连接失败，请检查网络后重试。';
+      }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('解析失败：$error')));
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(() {
@@ -348,6 +358,31 @@ class _SentenceCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(sentence.whyGood, style: theme.textTheme.bodySmall),
         ],
+      ),
+    );
+  }
+}
+
+class _WordChip extends StatelessWidget {
+  const _WordChip({
+    required this.wordAnalysis,
+  });
+
+  final WordAnalysis wordAnalysis;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        WordDetailOverlay.show(
+          context: context,
+          detail: wordAnalysis,
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Chip(
+        label: Text(wordAnalysis.word),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

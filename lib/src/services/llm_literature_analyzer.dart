@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../models/literary_analysis_result.dart';
 import '../models/sentence_analysis.dart';
-import 'heuristic_excerpt_picker.dart';
+import '../models/word_analysis.dart';
 import 'literature_analyzer.dart';
 import 'llm_client.dart';
 
@@ -23,7 +23,7 @@ class LlmLiteratureAnalyzer implements LiteratureAnalyzer {
   Future<LiteraryAnalysisResult> analyzeArticle(String articleText) async {
     if (articleText.trim().isEmpty) {
       return const LiteraryAnalysisResult(
-        beautifulWords: <String>[],
+        beautifulWords: <WordAnalysis>[],
         beautifulSentences: <SentenceAnalysis>[],
         reflection: '',
       );
@@ -31,15 +31,13 @@ class LlmLiteratureAnalyzer implements LiteratureAnalyzer {
 
     final String prompt = await _buildPrompt(articleText);
     final String rawResponse = await _client.complete(prompt);
-    try {
-      final LiteraryAnalysisResult result = _parseResult(rawResponse);
-      if (_isValidResult(result)) {
-        return result;
-      }
-      return pickHeuristicAnalysis(articleText);
-    } catch (_) {
-      return pickHeuristicAnalysis(articleText);
+    final LiteraryAnalysisResult result = _parseResult(rawResponse);
+    if (_isValidResult(result)) {
+      return result;
     }
+    throw Exception(
+      'AI 解析结果不完整，请重试。可能原因：词语少于10个、句子少于5条或读后感为空。',
+    );
   }
 
   bool _isValidResult(LiteraryAnalysisResult result) {
@@ -73,7 +71,7 @@ class LlmLiteratureAnalyzer implements LiteratureAnalyzer {
       throw const FormatException('LLM 返回格式错误');
     }
 
-    final List<String> beautifulWords = _extractWords(
+    final List<WordAnalysis> beautifulWords = _extractWords(
       decoded['beautiful_words'],
     );
     final List<SentenceAnalysis> beautifulSentences = _extractSentences(
@@ -88,14 +86,22 @@ class LlmLiteratureAnalyzer implements LiteratureAnalyzer {
     );
   }
 
-  List<String> _extractWords(Object? rawWords) {
+  List<WordAnalysis> _extractWords(Object? rawWords) {
     if (rawWords is! List<Object?>) {
-      return <String>[];
+      return <WordAnalysis>[];
     }
     return rawWords
-        .map((Object? word) => (word ?? '').toString().trim())
-        .where((String word) => word.isNotEmpty)
-        .toSet()
+        .whereType<Map<String, Object?>>()
+        .map((Map<String, Object?> row) {
+          final String word = (row['word'] ?? '').toString().trim();
+          final String definition = (row['definition'] ?? '').toString().trim();
+          final String usage = (row['usage'] ?? '').toString().trim();
+          if (word.isEmpty || definition.isEmpty || usage.isEmpty) {
+            return null;
+          }
+          return WordAnalysis(word: word, definition: definition, usage: usage);
+        })
+        .whereType<WordAnalysis>()
         .toList();
   }
 

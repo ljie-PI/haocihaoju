@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'sentence_analysis.dart';
+import 'word_analysis.dart';
 
 class QuoteItem {
   const QuoteItem({
@@ -14,7 +15,7 @@ class QuoteItem {
 
   final String id;
   final String articleText;
-  final List<String> beautifulWords;
+  final List<WordAnalysis> beautifulWords;
   final List<SentenceAnalysis> beautifulSentences;
   final String reflection;
   final DateTime createdAt;
@@ -30,7 +31,9 @@ class QuoteItem {
           : beautifulSentences.first.whyGood,
       'style_notes': '',
       'article_text': articleText,
-      'beautiful_words_json': jsonEncode(beautifulWords),
+      'beautiful_words_json': jsonEncode(
+        beautifulWords.map((WordAnalysis w) => w.toMap()).toList(),
+      ),
       'sentence_analyses_json': jsonEncode(
         beautifulSentences
             .map((SentenceAnalysis item) => item.toMap())
@@ -46,7 +49,7 @@ class QuoteItem {
     final String sentenceJson = (map['sentence_analyses_json'] ?? '')
         .toString();
 
-    final List<String> words = _parseWordsJson(wordsJson);
+    final List<WordAnalysis> words = _parseWordsJson(wordsJson);
     final List<SentenceAnalysis> sentenceAnalyses = _parseSentenceAnalyses(
       sentenceJson,
     );
@@ -79,21 +82,42 @@ class QuoteItem {
     );
   }
 
-  static List<String> _parseWordsJson(String value) {
+  static List<WordAnalysis> _parseWordsJson(String value) {
     if (value.trim().isEmpty) {
-      return <String>[];
+      return <WordAnalysis>[];
     }
     try {
       final Object? decoded = jsonDecode(value);
       if (decoded is! List<Object?>) {
-        return <String>[];
+        return <WordAnalysis>[];
       }
-      return decoded
-          .map((Object? item) => (item ?? '').toString().trim())
-          .where((String item) => item.isNotEmpty)
-          .toList();
+
+      // 尝试解析新格式（WordAnalysis 对象数组）
+      try {
+        return decoded
+            .whereType<Map<String, Object?>>()
+            .map(WordAnalysis.fromMap)
+            .where(
+              (WordAnalysis item) =>
+                  item.word.isNotEmpty &&
+                  item.definition.isNotEmpty &&
+                  item.usage.isNotEmpty,
+            )
+            .toList();
+      } catch (_) {
+        // 失败则尝试旧格式（字符串数组），转换为 WordAnalysis
+        return decoded
+            .map((Object? item) => (item ?? '').toString().trim())
+            .where((String item) => item.isNotEmpty)
+            .map((String word) => WordAnalysis(
+                  word: word,
+                  definition: '暂无释义',
+                  usage: '暂无用法说明',
+                ))
+            .toList();
+      }
     } catch (_) {
-      return <String>[];
+      return <WordAnalysis>[];
     }
   }
 
