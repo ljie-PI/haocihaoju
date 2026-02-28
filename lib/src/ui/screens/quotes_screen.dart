@@ -6,6 +6,7 @@ import '../../data/quote_repository.dart';
 import '../../models/quote_item.dart';
 import '../../models/sentence_analysis.dart';
 import '../../models/word_analysis.dart';
+import '../../services/quote_share_service.dart';
 import '../../ui/widgets/word_detail_overlay.dart';
 
 class QuotesScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
   StreamSubscription<List<QuoteItem>>? _subscription;
   List<QuoteItem> _quotes = <QuoteItem>[];
   bool _loading = true;
+  final QuoteShareService _shareService = QuoteShareService();
 
   @override
   void initState() {
@@ -61,6 +63,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
                 return _QuoteItemCard(
                   item: item,
                   onDelete: () => _delete(item.id),
+                  onShare: () => _share(item),
                 );
               },
             ),
@@ -78,6 +81,34 @@ class _QuotesScreenState extends State<QuotesScreen> {
     });
   }
 
+  Future<void> _share(QuoteItem quote) async {
+    try {
+      final Rect sharePositionOrigin = _buildSharePositionOrigin(context);
+      await _shareService.shareQuoteAsPdf(
+        quote,
+        sharePositionOrigin: sharePositionOrigin,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：$e')),
+      );
+    }
+  }
+
+  Rect _buildSharePositionOrigin(BuildContext context) {
+    final RenderObject? renderObject = context.findRenderObject();
+    if (renderObject is RenderBox &&
+        renderObject.hasSize &&
+        renderObject.size.width > 0 &&
+        renderObject.size.height > 0) {
+      return renderObject.localToGlobal(Offset.zero) & renderObject.size;
+    }
+
+    final Size fallbackSize = MediaQuery.sizeOf(context);
+    return Rect.fromLTWH(0, 0, fallbackSize.width, fallbackSize.height);
+  }
+
   Future<void> _delete(String id) async {
     await widget.repository.deleteQuote(id);
     if (!mounted) {
@@ -93,10 +124,12 @@ class _QuoteItemCard extends StatelessWidget {
   const _QuoteItemCard({
     required this.item,
     required this.onDelete,
+    required this.onShare,
   });
 
   final QuoteItem item;
   final VoidCallback onDelete;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -160,10 +193,20 @@ class _QuoteItemCard extends StatelessWidget {
             ),
             Align(
               alignment: Alignment.centerRight,
-              child: IconButton(
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
-                tooltip: '删除',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: onShare,
+                    icon: const Icon(Icons.picture_as_pdf),
+                    tooltip: '分享 PDF',
+                  ),
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: '删除',
+                  ),
+                ],
               ),
             ),
           ],
